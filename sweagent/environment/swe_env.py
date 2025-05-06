@@ -252,12 +252,15 @@ class SWEEnv:
         """Write content to file in container"""
         asyncio.run(self.deployment.runtime.write_file(WriteFileRequest(path=str(path), content=content)))
 
-    def set_env_variables(self, env_variables: dict[str, str]) -> None:
+    def set_env_variables(self, env_variables: dict[str, str], escape=True) -> None:
         """Set environment variables in the environment."""
         if not env_variables:
             self.logger.debug("No environment variables to set")
             return
-        _env_setters = [f"export {k}={shlex.quote(str(v))}" for k, v in env_variables.items()]
+        if escape:
+            _env_setters = [f"export {k}={shlex.quote(str(v))}" for k, v in env_variables.items()]
+        else:
+            _env_setters = [f"export {k}={str(v)}" for k, v in env_variables.items()]
         command = " && ".join(_env_setters)
         self.communicate(command, check="raise")
 
